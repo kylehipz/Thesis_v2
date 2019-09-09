@@ -1,7 +1,6 @@
 from flask import Flask, render_template, Response, session, redirect, url_for, request, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 import hashlib
-from copy import deepcopy
 import numpy as np
 import cv2
 import tensorflow as tf
@@ -10,21 +9,34 @@ from PIL import Image
 from Detector.Detector import LPDetector
 from camera import VideoCamera
 import imgproc as proc
-from models import *
 from datetime import datetime
+import pymongo
+import string
+import random
 
+# load detector
 detector = LPDetector('inference_graphs/license_plate_graph.pb')
+
+
+# add database connection
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+db = client.test
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///SSS.db'
-app.secret_key = b'AKO ANG HARI NG TUGMA'
-db = SQLAlchemy(app)
+
+def rand():
+    return random.choice(string.ascii_letters)
 
 def hanash(string):
+    # hashing for password
     h = hashlib.md5(bytes(string, encoding='utf-8'))
     return h.hexdigest()
 
 
 def gen(camera, entrance):
+    """
+    Camera live feed
+    """
     prev_text = ""
     ctr = 0
     frame_ctr = 0
@@ -46,18 +58,30 @@ def gen(camera, entrance):
                         continue
 
                     # add to the database
-                    datenow = datetime.now()
-                    image_path = "".join(str(datenow).split(" "))
-                    image_path = "".join(image_path.split("-"))
-                    image_path = "".join(image_path.split(":"))
-                    image_path = "".join(image_path.split("."))
-                    image_path = f"{image_path}.jpg"
-                    log = Logs(plate_number=prev_text, date_time=datenow, image_path=image_path, entrance=entrance)
-                    db.session.add(log)
-                    db.session.commit()
+                    image_path = ""
+
+                    for i in range(11):
+                        image_path += rand()
+
+                    image_path = hanash(image_path)
+
+                    # check if homeowner
+                    owner = db.homeowners.find_one({"plate_number":prev_text})
+                    visitor = "No" if owner else "Yes"
+
+                    Log = {"plate_number": prev_text,
+                            "image_path": image_path,
+                           "entrance": 1,
+                           "visitor": visitor,
+                           "owner": owner.name if owner else "Unknown",
+                           "date_recorded": datetime.now()}
+
+                    db.logs.insert_one(Log)
                     prev_text = ""
                     ctr = 0
-                    cv2.imwrite(f"license_plates/{image_path}", frame)
+
+                    # save image
+                    cv2.imwrite(f'../Infra/public/license_plates/{image_path}.jpg', frame)
 
             # reset frame counter to 0
             frame_ctr = 0
