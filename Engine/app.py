@@ -73,7 +73,7 @@ def gen(camera, entrance):
                             "image_path": image_path,
                            "entrance": 1,
                            "visitor": visitor,
-                           "owner": owner.name if owner else "Unknown",
+                           "owner": owner['name'] if owner else "Unknown",
                            "date_recorded": datetime.now()}
 
                     db.logs.insert_one(Log)
