@@ -9,12 +9,21 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 
+
 // Set EJS template engine
 app.set("view engine", "ejs");
 app.use(express.static('public'));
 
-// Mongodb Database Connection
-mongoose.connect('mongodb://localhost/test');
+/********************  Middlewares ************************************************/
+
+// Back button
+app.use(function(req, res, next) {
+  res.set('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+  next();
+});
+
+// Mongodb Database Connection 
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
 let db = mongoose.connection;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -38,17 +47,6 @@ app.use(function (req, res, next) {
   next();
 });
 
-// Load Routes
-let routes = require('./routes');
-
-// load admin model
-let Admins = require('./models/admin.js');
-
-// Use Routes
-app.use('/homeowners', routes.homeowners);
-app.use('/logs', routes.logs);
-app.use('/admins', routes.admins);
-
 // Passport Middleware
 require('./config/passport')(passport);
 app.use(passport.initialize());
@@ -59,32 +57,101 @@ app.get('*', function(req, res, next){
   next();
 });
 
+/********************   End    ************************************************/
 
-app.get("/", (req, res) => {
-	//if (req.session.user)
-		//res.redirect('/dashboard');
-	//else 
-	res.render('login');
+
+// load admin model
+let Admins = require('./models/admin.js');
+
+/**************** Use Routes ******************/
+let routes = require('./routes');
+app.use('/homeowners', ensureAuthenticated, routes.homeowners);
+app.use('/logs', routes.logs);
+app.use('/admins', routes.admins);
+/**************** End Routes ******************/
+
+/**************** Root Routes ****************/
+
+/*
+ * @route GET
+ * @desc Load login page
+ * @access Public
+ */
+app.get("/", ensureLogin, (req, res) => {
+	res.render('login', {title: 'Login'});
 });
 
+/*
+ * @route POST
+ * @desc Authenticate Credentials
+ * @access Public
+ */
 app.post("/", (req, res, next) => {
 	passport.authenticate('local', {
 		successRedirect: '/dashboard',
 		failureRedirect: '/',
-		failureFlash: true
+		failureFlash: true,
 	})(req, res, next);
 });
 
-app.get("/dashboard", (req, res) => {
-	//console.log(req.session.user);
-	res.render('dashboard');
+/*
+ * @route GET
+ * @desc load Dashboard
+ * @access Public
+ */
+app.get("/dashboard", ensureAuthenticated, (req, res) => {
+	res.render('dashboard', {title: 'Dashboard'});
 });
 
-// Live Feed
-app.get("/live_feed", (req, res) => {
-	res.render('live_feed');
+/*
+ * @route GET
+ * @desc load Live Feed
+ * @access Public
+ */
+app.get("/live_feed", ensureAuthenticated, (req, res) => {
+	res.render('live_feed', {title: 'Live Feed'});
 });
 
+/*
+* @route  GET
+* @desc	  Logout
+* @access Public
+*/
+app.get("/logout", async (req, res) => {
+	res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma' : 'no-cache',
+    'Expires' : '0',
+	});
+	await req.logout();
+	await req.flash('Success', 'Successfully logged out!');
+	await res.redirect('/');
+});
+
+/**************** End Root Routes ****************/
+
+/********** Access Control **********/
+function ensureAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		return next();
+	}
+	else {
+		req.flash('danger', 'You need to login first!');
+		res.redirect('/');
+	}
+}
+
+function ensureLogin(req, res, next) {
+	if (!req.isAuthenticated()) {
+		return next();
+	}
+	else {
+		res.redirect('/dashboard');
+	}
+}
+/********** End Access Control **********/
+
+/******** Start Server **********/
 app.listen(3000, () => {
 	console.log("Server has started!");
 });

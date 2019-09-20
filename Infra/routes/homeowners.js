@@ -3,28 +3,19 @@ const mongoose = require('mongoose');
 let router = express.Router();
 
 // connect database
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
 let db = mongoose.connection;
 
 db.once('open', () => {
 	console.log("connected to mongodb");
-})
+});
 
 db.on('error', (err) => {
 	console.log(err);
 });
 
-function isAuthenticated(req, res, next) {
-	if (!req.session.user) {
-		req.flash('danger', 'You need to log in first!');
-		res.redirect('/');
-	}
-
-	next();
-};
-
 // Load homeowners model
-Homeowner = require('../models/homeowner');
+let Homeowner = require('../models/homeowner');
 
 /*
 * @route  GET
@@ -34,8 +25,8 @@ Homeowner = require('../models/homeowner');
 router.get("/", (req, res) => {
 	Homeowner.find({}, (err, homeowners) => {
 		if (err) console.log(err);
-		res.render('homeowners', { homeowners:homeowners });
-	})
+		res.render('homeowners', {title: 'Homeowners', homeowners:homeowners });
+	});
 });
 
 /*
@@ -45,7 +36,7 @@ router.get("/", (req, res) => {
 */
 router.get("/add", (req, res) => {
 	//res.json("add a homeowner!!");
-	res.render('add_homeowner');
+	res.render('add_homeowner', {title: 'Add Homeowner'});
 });
 
 /*

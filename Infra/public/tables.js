@@ -15,10 +15,10 @@ $(document).ready(function() {
 							<td>${data.owner == 'Unknown' ? 'Yes' : 'No'}</td>
 							<td>${data.owner}</td>
 							<td>${data.entrance ? 'Entrance': 'Exit'}</td>
-							<td>${data.date_recorded}</td>
+							<td>${data.date_recorded.toString()}</td>
 						</tr>`)
 				});
-				$("#logs_table").DataTable();
+				//$("#logs_table").DataTable();
 			}
 		});
 	})

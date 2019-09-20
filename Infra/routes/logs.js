@@ -3,29 +3,20 @@ const mongoose = require('mongoose');
 let router = express.Router();
 
 // connect database
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
 let db = mongoose.connection;
-
-function isAuthenticated(req, res, next) {
-	if (!req.session.user) {
-		req.flash('danger', 'You need to log in first!');
-		res.redirect('/');
-	}
-
-	next();
-};
 
 db.once('open', () => {
 	console.log("connected to mongodb");
-})
+});
 
 db.on('error', (err) => {
 	console.log(err);
 });
 
 // load log model
-Logs = require('../models/log');
-Homeowners = require('../models/homeowner');
+let Logs = require('../models/log');
+let Homeowners = require('../models/homeowner');
 
 /*
 * @route  GET
@@ -37,7 +28,7 @@ router.get("/", (req, res) => {
 		if (err)
 			console.log("ERROR!");
 
-		res.render('logs', { logs:logs });
+		res.render('logs', {title: 'Logs', logs:logs });
 
 		//res.json(logs);
 	});
@@ -54,7 +45,19 @@ router.get("/ajax_logs", (req, res) => {
 	});
 });
 
-
+/*
+* @route  GET
+* @desc	  Data for charts
+* @access Public
+*/
+router.get("/charts", async (req, res) => {
+	var counts = [];
+	for (var i = 0; i < 7; i++) {
+		var count = await Logs.countDocuments({date_day:i});
+		counts.push(count);
+	}
+	res.json({"counts":counts});
+});
 
 /*
 * @route  GET
@@ -63,10 +66,11 @@ router.get("/ajax_logs", (req, res) => {
 */
 router.get("/:id", (req, res) => {
 	Logs.findOne({image_path:req.params.id}).then((log) => {
-		res.render('see_log', { log:log });
+		res.render('see_log', {title: 'Log Image',  log:log });
 		//res.json(log);
 	})
 	//res.json({id:req.params.id});
 });
+
 
 module.exports = router;

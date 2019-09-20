@@ -7,7 +7,9 @@ let logSchema = mongoose.Schema({
 	entrance: Boolean,
 	visitor: Boolean,
 	owner: String,
-	date_recorded: Date
+	date_recorded: Date,
+	date_day: Number,
+	date_month: Number
 });
 
 module.exports = mongoose.model('Log', logSchema);

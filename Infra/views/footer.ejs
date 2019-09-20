@@ -12,6 +12,12 @@
 <script type="text/javascript" src="/vendors/jqvmap/dist/jquery.vmap.min.js"></script>
 <script type="text/javascript" src="/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
 <script type="text/javascript" src="/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
-<!--<script type="text/javascript" src="assets/js/tables.js">-->
+<script>
+	$ = jQuery.noConflict();
+	window.setTimeout(function() {
+    $(".alert").fadeTo(500, 0).slideUp(500, function(){
+        $(this).remove(); 
+    });
+}, 1000);
 </script>
 </html>

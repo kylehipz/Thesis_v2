@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 router = express.Router();
 
 // connect database
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
 let db = mongoose.connection;
 
 db.once('open', () => {
@@ -38,7 +38,7 @@ router.get("/", (req, res) => {
 * @access Public
 */
 router.get("/add", (req, res) => {
-	res.render('add_admin');
+	res.render('add_admin', {title: 'Add Admin'});
 });
 
 /*

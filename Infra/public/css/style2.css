@@ -4,8 +4,18 @@
 	border-color: #ebccd1;
 }
 
-.alert-success_msg{
+.alert-Success{
 	color: #3c763d;
 	background-color: #dff0d8;
 	border-color: #d6e9c6;
+}
+
+.badge-Success{
+	color: #fff;
+	background-color: #28a745;
+}
+
+.badge-error{
+	color: #fff;
+	background-color: #dc3545;
 }
