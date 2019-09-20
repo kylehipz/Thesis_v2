@@ -68,13 +68,17 @@ def gen(camera, entrance):
                     # check if homeowner
                     owner = db.homeowners.find_one({"plate_number":prev_text})
                     visitor = "No" if owner else "Yes"
+                    
+                    # date_now = datetime.now()
 
                     Log = {"plate_number": prev_text,
                             "image_path": image_path,
                            "entrance": 1,
                            "visitor": visitor,
                            "owner": owner['name'] if owner else "Unknown",
-                           "date_recorded": datetime.now()}
+                           "date_recorded": datetime.now(),
+                           "date_day": datetime.now().weekday(),
+                           "date_month": datetime.now().month}
 
                     db.logs.insert_one(Log)
                     prev_text = ""
